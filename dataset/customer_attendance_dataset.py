@@ -6,13 +6,9 @@ import pandas as pd
 
 from .base_dataset import BaseDataSet
 from datetime import timedelta, datetime
-import src.config as config
-
-# 显示所有列
-pd.set_option('display.max_columns', None)
-# 显示所有行
-pd.set_option('display.max_rows', None)
-# 设置value的显示长度为100，默认为50
+import src.config as config    
+pd.set_option('display.max_columns', None)    
+pd.set_option('display.max_rows', None)    
 pd.set_option('max_colwidth', 100)
 
 base_dir = os.path.split(os.path.realpath(__file__))[0]
@@ -27,8 +23,8 @@ class CustomerAttendanceDataset(BaseDataSet):
     def __init__(self, dataset_id: int, running_dt_end: str, train_interval: int, file_type: str,  **param):
         super().__init__(param)
         logger.info('-----Loading data-----')
-        self.sale_data = pd.read_csv("../data/raw/ADS_AI_MRT_SALES_SHIPPING.csv")
-        self.org_data = pd.read_csv("../data/raw/ADS_AI_MRT_DIM_ORG_INV.csv")
+        self.sale_data = pd.read_csv("SHIPPING.csv")
+        self.org_data = pd.read_csv("ORG_INV.csv")
         self.dataset_id = dataset_id
         self.running_dt_end = running_dt_end
         self.train_interval = train_interval
@@ -45,7 +41,6 @@ class CustomerAttendanceDataset(BaseDataSet):
         org_data = self.org_data.copy()
         sale_data = pd.merge(sale_data, org_data, on='org_inv_dk', how='left')
         sale_data = sale_data[sale_data['l3_org_inv_nm'] == config.dataset_id[self.dataset_id]]
-        # 仅包含[start_date, end_date]的发货数据
         sale_data = sale_data[sale_data['shipping_dt'] <= self.end_date]
         self.sale_data = sale_data.drop_duplicates(subset=['cust_dk', 'shipping_dt'], keep='first')[['cust_dk', 'shipping_dt']]
         self.sale_data['purchase_count'] = 1
@@ -54,8 +49,6 @@ class CustomerAttendanceDataset(BaseDataSet):
         sale_data = self.sale_data.copy()
         sale_data['shipping_dt'] = pd.to_datetime(sale_data['shipping_dt'])
 
-        # 生成每个日期×每个客户的笛卡尔积表，并关联发货记录。
-        # 在发货记录中的行purchase_count为1,不在的为nan.填充后不在的为0.
         dates = pd.date_range(self.start_date, self.end_date)
         users = sale_data['cust_dk'].unique()
         index = pd.MultiIndex.from_product([dates, users], names=['shipping_dt', 'cust_dk'])

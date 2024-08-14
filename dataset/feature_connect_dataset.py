@@ -57,7 +57,6 @@ class FeatureConnect(object):
     def _post_processing_data(self):
         index_data = self.index_data.copy()
         index_data = index_data[self.index_columns + self.feature_columns + self.label]
-        # 统计各字段nan值
         null_counts = index_data.isnull().sum()
         logger.info("-----null value as follows: {}".format(null_counts))
         logger.info("-----Processed Dataset Size：{}".format(len(index_data)))

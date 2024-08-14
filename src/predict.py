@@ -9,17 +9,14 @@ import config as config
 
 from tqdm import tqdm
 from model.Gru import GRU
-from model.iGru import iGRU
 from model.Lstm import LSTM
 from model.LstNet import LSTNet
 from model.DLinear import DLinear
 from model.TimesNet import TimesNet
 from model.Informer import Informer
 from model.Crossformer import Crossformer
-from model.Segrnn import SegRnn
 from model.PatchTST import PatchTST
 from model.Transformer import Transformer
-from model.iTransformer import iTransformer
 from model.AttentionGru import AttentionGRU
 
 from torch.utils.data import TensorDataset
@@ -59,25 +56,25 @@ class Predict(TrainModule):
         self.params['d_model'] = args.d_model
         self.params['seq_len'] = args.seq_length
 
-        self.predict_interval = args.seq_length  # 预测切片间隔
+        self.predict_interval = args.seq_length 
 
-        self.predict_length = args.predict_length  # 预测天数
+        self.predict_length = args.predict_length 
 
-        self.predict_start_date = "2023-10-1"  # 预测开始日期
+        self.predict_start_date = "2023-10-1" 
 
-        self.predict_sample_data = pd.DataFrame()  # 预测样本
+        self.predict_sample_data = pd.DataFrame()
 
-        self.predict_index_data = pd.DataFrame()  # 预测索引样本
+        self.predict_index_data = pd.DataFrame()
 
-        self.predict_encode_data = pd.DataFrame()  # 四级公司序列编码
+        self.predict_encode_data = pd.DataFrame()  
 
-        self.predict_feature_data = pd.DataFrame()  # 预测集关联特征
+        self.predict_feature_data = pd.DataFrame() 
 
-        self.predict_transform_data = pd.DataFrame()  # 预测集transform
+        self.predict_transform_data = pd.DataFrame() 
 
         self.option_feature = config.option_feature
 
-        self.output_data = pd.DataFrame()  # 预测结果输出文件
+        self.output_data = pd.DataFrame() 
 
         self.predict_loader = None
 
@@ -104,22 +101,16 @@ class Predict(TrainModule):
         self.predict_output_path = args.predict_output_path + f"dataset_{self.dataset_id}/"
 
     def create_predict_index_dataset(self):
-        logger.info('-----数据集id：{}'.format(self.dataset_id))
         obj = PredictSampleDataset(dataset_id=self.dataset_id, predict_date=self.predict_start_date, predict_interval=self.seq_length, predict_length=self.predict_length, user_length=self.user_length)
         self.predict_sample_data, self.output_data = obj.main()
 
-        logger.info('-----四级公司序列自编码器-----')
         obj = AutoEncodeMode(self.dataset_id)
         self.predict_index_data = obj.encode_mode_predict_data(self.predict_sample_data)
 
         predict_index_data_path = f"../data/interim/dataset_{self.dataset_id}/predict_encode_data.csv"
         self.predict_index_data.to_csv(predict_index_data_path, index=False)
 
-        logger.info('------预测集保存为：{}'.format(predict_index_data_path))
-        logger.info('-----数据集构造完成-----')
-
     def connect_feature_engineer(self):
-        logging.info('-----构造上下文特征-----')
         obj = FeatureConnect(dataset_id=self.dataset_id, index_data=self.predict_index_data)
         self.predict_feature_data = obj.main()
         cluster_data = pd.read_csv(f"../data/cluster_data/dataset_{self.dataset_id}/cluster_{self.n_clusters}_output_data.csv")
@@ -128,8 +119,6 @@ class Predict(TrainModule):
         self.predict_feature_data.to_csv(f"../data/interim/dataset_{self.dataset_id}/predict_feature_data.csv")
 
     def transform(self):
-        logger.info('-----加载预测集-----')
-        logger.info('-----预测集transform-----')
         transform = _load_transform(transformer_path=f"../data/interim/dataset_{self.dataset_id}/transform.json")
         self.predict_transform_data = transform.transform(input_dataset=self.predict_feature_data)
         self.predict_transform_data.to_csv(f"../data/interim/dataset_{self.dataset_id}/predict_transform_data.csv", index=False)
@@ -188,11 +177,7 @@ class Predict(TrainModule):
         logging.info("----model type is : {}".format(self.model_type))
 
         if option_model == "gru":
-            # 定义GRU网络
             self.model = GRU(self.params)
-
-        elif option_model == "iGru":
-            self.model = iGRU(self.params)
 
         elif option_model == "lstm":
             self.model = LSTM(self.params)
@@ -209,9 +194,6 @@ class Predict(TrainModule):
         elif option_model == "Transformer":
             self.model = Transformer(self.params)
 
-        elif option_model == "iTransformer":
-            self.model = iTransformer(self.params)
-
         elif option_model == "Informer":
             self.model = Informer(self.params)
 
@@ -227,8 +209,6 @@ class Predict(TrainModule):
             logging.info("d_model: {}".format(self.params['d_model']))
             logging.info("seq_length: {}".format(self.seq_length))
 
-        elif option_model == "SegRnn":
-            self.model = SegRnn(self.params)
 
         self.model.to(device)
 
@@ -253,8 +233,7 @@ class Predict(TrainModule):
                 y_predict_pred = self.model(x_predict, padding_mask)
                 y_predict_pred_list.append(y_predict_pred)
                 y_predict_label_list.append(y_predict)
-                pre_bar.desc = "Predicting"
-            # 使用 NumPy 的 concatenate 将列表中的 tensor 拼接成一个一维数组
+                pre_bar.desc = "Predicting" 
             y_predict_pred_array = np.concatenate([tensor.cpu().numpy() for tensor in y_predict_pred_list])
             y_predict_label_array = np.concatenate([tensor.cpu().numpy() for tensor in y_predict_label_list])
 
@@ -327,9 +306,7 @@ class Predict(TrainModule):
         mlflow.log_metric("d_model", self.params['d_model'])
         mlflow.log_metric("hidden_size", self.params['hidden_size'])
         mlflow.log_metric("seq_length", self.seq_length)
-        mlflow.log_metric("is_data_enhancement", self.is_dataEnhancement)
-
-        # mlflow.log_metric("top_k", self.params['top_k'])
+        mlflow.log_metric("is_data_enhancement", self.is_dataEnhancement) 
 
     def evaluation_indicators_top(self, data):
         df = data.sort_values(by="pre_order_prob", ascending=False).reset_index(drop=True)
@@ -348,13 +325,9 @@ class Predict(TrainModule):
         return data
 
     def main(self):
-        logger.info('-------构造预测集-------')
         self.create_predict_index_dataset()
-        logging.info('-----关联特征-----')
         self.connect_feature_engineer()
-        logger.info('-------Transform-------')
         self.transform()
-        logging.info('-----关联聚类分群-----')
         self._cluster_group(is_cluster=self.is_cluster)
         mlflow.set_experiment("Predict_test")
         if self.is_cluster is False:
@@ -364,25 +337,17 @@ class Predict(TrainModule):
             run_name = f"predict_{self.model_type}_cluster"
         with mlflow.start_run(run_name=run_name):
             for cluster in range(0, self.n_clusters):
-                logging.info("-----当前训练客户群id为: {}".format(cluster))
-                logger.info('-------处理为时序数据集-------')
                 self.data_preprocess(cluster=cluster, is_cluster=self.is_cluster)
-                logger.info('-------加载数据集-------')
                 self.dataloader(cluster=cluster, is_cluster=self.is_cluster)
-                logger.info('-------加载模型-------')
                 self.load_model(option_model=self.model_type, cluster=cluster, is_cluster=self.is_cluster)
-                logger.info('-------开始预测-------')
                 self.predict(cluster)
                 logger.info('-------Done!  You are very good!-------')
             if self.is_cluster:
-                logger.info('-------计算总体平均指标-------')
                 self.evaluation_indicators_cluster(self.n_clusters)
             else:
-                logger.info('-------计算总体指标-------')
                 self.evaluation_indicators_without_cluster()
 
 
-if __name__ == '__main__':
-    # pre = Predict()
-    # pre.main()
+if __name__ == '__main__': 
+ 
     pass
