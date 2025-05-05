@@ -101,9 +101,6 @@ class TrainSampleDataset(object):
         cust_data = cust_data[['cust_dk']].drop_duplicates()
         cust_data.reset_index()
         num_cust = len(cust_data)
-        logging.info('-----客户集时间间隔为：{}'.format(self.user_length))
-        logging.info('-----客户数为：{}'.format(num_cust))
-
         org_temp_data = config.l4_dict[self.dataset_id]
         org_temp_data = org_temp_data[['l4_org_inv_nm']]   
         index_sample_data = pd.merge(date_data.assign(key=1), cust_data.assign(key=1), on='key').drop('key', axis=1)
@@ -125,21 +122,11 @@ class TrainSampleDataset(object):
 
         raw_data['label'].fillna(0, inplace=True)
 
-        counts = raw_data['label'].value_counts()
-        logger.info("---正样本：{}".format(counts[1]))
-        logger.info("---负样本：{}".format(counts[0]))
-        logger.info("---总样本量：{}".format(len(raw_data)))
-        ratio = counts[0] / counts[1]
-        logger.info("---正负样本比例为 1：{}".format(ratio))
-
         self.data = raw_data
 
     def main(self):
-        logger.info("-----构建标签集-----")
         self._creat_label_dataset()
-        logger.info("-----构建样本集-----")
         self._create_index_sample_dataset()
-        logger.info("-----样本集关联真实标签生成原始数据集-----")
         self._create_dataset()
         logger.info("-----Done-----")
         return self.data
