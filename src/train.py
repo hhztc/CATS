@@ -109,9 +109,6 @@ class TrainModule(object):
 
         self.tans_obj = DatasetTransformPipeline()
 
-        logging.info('-----是否使用聚类：{}'.format(self.is_cluster))
-        logging.info('-----是否启动数据增强：{}'.format(self.is_dataEnhancement))
-
     def create_train_index_dataset(self):
         obj = TrainSampleDataset(dataset_id=self.dataset_id, user_length=self.user_length, train_interval=self.train_interval)
         self.train_sample_data = obj.main()
