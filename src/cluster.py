@@ -84,8 +84,6 @@ class ClusterModule(object):
         cust_data = cust_data[['cust_dk']].drop_duplicates()
         cust_data.reset_index()
         num_cust = len(cust_data)
-        logging.info('-----客户集时间间隔为：{}'.format(self.user_length))
-        logging.info('-----客户数为：{}'.format(num_cust))
 
         org_temp_data = config.l4_dict[self.dataset_id]
         org_temp_data = org_temp_data[['l4_org_inv_nm']]
